@@ -13,7 +13,7 @@
 
 ## Documentação Técnica
 
-- **[Fluxo Omnichannel](docs/netpro-fluxo-omnichannel.drawio)** - Diagrama editável do Draw.io
+- **[Fluxo Omnichannel](docs/netpro-fluxo-omnichannel.drawio.png)** - Diagrama editável do Draw.io
 - **[Explicação da Lógica](EXPLICACAO.md)** - Arquitetura e decisões técnicas
 
 ## 📋 Visão Geral
