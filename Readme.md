@@ -3,13 +3,13 @@
 ## Screenshots do Sistema
 
 ### Dashboard Administrativo
-![Dashboard Overview](docs/images/dashboard-overview.png)
+![Dashboard Overview](docs/screenshots/dashboard-overview.png)
 
 ### Testes da API em Tempo Real
-![Teste Técnico](docs/images/api-test-technical.png)
-![Teste Financeiro](docs/images/api-test-financial.png)
-![Teste com Sentimento](docs/images/api-test-frustrated.png)
-![Teste com Sentimento 2](docs/images/api-test-frustrated1.png)
+![Teste Técnico](docs/screenshots/api-test-technical.png)
+![Teste Financeiro](docs/screenshots/api-test-financial.png)
+![Teste com Sentimento](docs/screenshots/api-test-frustrated.png)
+![Teste com Sentimento 2](docs/screenshots/api-test-frustrated1.png)
 
 ## Documentação Técnica
 
