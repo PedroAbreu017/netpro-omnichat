@@ -1,0 +1,7 @@
+# Explicação da Lógica - NetPro OmniChat
+O Projeto implementa um sistema omnichannel inteligente que centraliza o atendimento de múltiplos canais (WhatsApp, Email, Chat Web, Telefonia) em uma API unificada, com um painel Dashboard em que o atendente acompanha os processos e requisições dos clientes.
+A arquitetura prioriza a continuidade da experiência do cliente através de um Context Engine que preserva histórico entre todos os canais de atendimento, eliminando a necessidade do cliente repetir informações ao migrar do WhatsApp para o site ou telefone. O sistema de IA em ISP classifica os problemas técnicos, financeiros e comerciais com precisão, permitindo respostas imediatas para 70% dos casos. 
+Para situações complexas, o escalonamento inteligente direciona o cliente para o departamento correto já com contexto completo carregado para o atendente. A detecção de sentimentos prioriza clientes frustrados, enquanto o sistema oferece tratamento diferenciado baseado no plano do cliente (Premium/Basic).
+ O webhook garante que o CRM seja atualizado em tempo real, permitindo que qualquer agente tenha visão panorâmica do cliente.
+A arquitetura Clean com MongoDB + Redis garante alta performance e escalabilidade. 
+O Objetivo é garantir um atendimento humanizado mesmo sendo automatizado, onde o cliente se sente conhecido e valorizado em cada interação, reduzindo tempo de resolução e aumentando satisfação.

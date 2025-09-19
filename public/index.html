@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NetPro OmniChat - Dashboard</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-blue: #2563eb;
+            --secondary-green: #059669;
+            --accent-purple: #7c3aed;
+            --dark: #1e293b;
+            --gray-light: #f8fafc;
+            --gray-medium: #64748b;
+            --white: #ffffff;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--gray-light);
+            color: var(--dark);
+            line-height: 1.6;
+        }
+
+        .header {
+            background: var(--white);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary-blue);
+        }
+
+        .logo i {
+            background: linear-gradient(135deg, var(--primary-blue), var(--secondary-green));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: #ecfdf5;
+            color: var(--secondary-green);
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .metric-card {
+            background: var(--white);
+            padding: 1.5rem;
+            border-radius: 1rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e2e8f0;
+            transition: transform 0.2s ease;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .metric-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .metric-title {
+            font-size: 0.875rem;
+            color: var(--gray-medium);
+            font-weight: 500;
+        }
+
+        .metric-icon {
+            width: 2.5rem;
+            height: 2.5rem;
+            border-radius: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.125rem;
+        }
+
+        .metric-value {
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--dark);
+        margin-bottom: 0.25rem;
+        background: linear-gradient(135deg, var(--primary-blue), var(--secondary-green));
+       -webkit-background-clip: text;
+       -webkit-text-fill-color: transparent;
+       background-clip: text;
+    }
+
+
+        .metric-change {
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .metric-change.positive {
+            color: var(--secondary-green);
+        }
+
+        .metric-change.negative {
+            color: #ef4444;
+        }
+
+        .metric-change.neutral {
+            color: var(--gray-medium);
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .conversations-panel {
+            background: var(--white);
+            border-radius: 1rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .panel-header {
+            padding: 1.5rem 2rem;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: between;
+            align-items: center;
+        }
+
+        .panel-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: var(--dark);
+        }
+
+        .conversation-list {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .conversation-item {
+            padding: 1rem 2rem;
+            border-bottom: 1px solid #f1f5f9;
+            transition: background-color 0.2s ease;
+        }
+
+        .conversation-item:hover {
+            background: var(--gray-light);
+        }
+
+        .conversation-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .customer-name {
+            font-weight: 600;
+            color: var(--dark);
+        }
+
+        .conversation-time {
+            font-size: 0.75rem;
+            color: var(--gray-medium);
+        }
+
+        .conversation-preview {
+            font-size: 0.875rem;
+            color: var(--gray-medium);
+            margin-bottom: 0.5rem;
+        }
+
+        .conversation-tags {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        .tag {
+            padding: 0.25rem 0.75rem;
+            border-radius: 1rem;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .tag.whatsapp {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .tag.technical {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .tag.ai {
+            background: #f3e8ff;
+            color: #7c3aed;
+        }
+
+        .tag.human {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .analytics-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .chart-card {
+            background: var(--white);
+            padding: 1.5rem;
+            border-radius: 1rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .chart-title {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--dark);
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 0.5rem;
+            background: #e2e8f0;
+            border-radius: 0.25rem;
+            overflow: hidden;
+            margin-bottom: 0.5rem;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--secondary-green), var(--primary-blue));
+            border-radius: 0.25rem;
+            transition: width 0.3s ease;
+        }
+
+        .progress-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.75rem;
+            color: var(--gray-medium);
+        }
+
+        .alert-card {
+           background: linear-gradient(135deg, #fff3cd 0%, #fef7e6 100%);
+           border: 1px solid #ffeaa7;
+           border-radius: 12px;
+           padding: 20px;
+           box-shadow: 0 4px 12px rgba(255, 193, 7, 0.15);
+           position: relative;
+           overflow: hidden;
+       }
+
+        .alert-card::before {
+          content: '';
+          position: absolute;
+          left: 0;
+          top: 0;
+          width: 4px;
+          height: 100%;
+          background: linear-gradient(180deg, #ff6b35, #f9ca24);
+       }
+
+        .alert-title {
+         font-weight: 600;
+         margin-bottom: 0.5rem;
+         display: flex;
+         align-items: center;
+         gap: 8px;
+       }
+        
+       .alert-actions {
+        margin-top: 12px;
+        display: flex;
+        gap: 8px;
+       }
+
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: none;
+            font-size: 0.875rem;
+        }
+
+        .btn-primary {
+            background: var(--primary-blue);
+            color: var(--white);
+        }
+
+        .btn-primary:hover {
+            background: #1d4ed8;
+        }
+
+      .alert-status {
+    margin-top: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.status-badge {
+    background: rgba(34, 197, 94, 0.1);
+    color: var(--secondary-green);
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    border: 1px solid rgba(34, 197, 94, 0.2);
+}
+
+.alert-time {
+    font-size: 0.75rem;
+    color: var(--gray-medium);
+    font-style: italic;
+}
+
+        .test-section {
+            margin-top: 2rem;
+            padding: 2rem;
+            background: var(--white);
+            border-radius: 1rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .test-form {
+            display: grid;
+            grid-template-columns: 1fr 1fr 2fr auto;
+            gap: 1rem;
+            align-items: end;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .form-label {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--dark);
+        }
+
+        .form-input {
+            padding: 0.75rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+        }
+
+        .form-select {
+            padding: 0.75rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+            background: var(--white);
+        }
+
+        .response-area {
+            margin-top: 1.5rem;
+            padding: 1rem;
+            background: var(--gray-light);
+            border-radius: 0.5rem;
+            border: 1px solid #e2e8f0;
+        }
+
+        .response-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .response-json {
+            background: var(--dark);
+            color: #22c55e;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 0.75rem;
+            white-space: pre-wrap;
+            overflow-x: auto;
+        }
+
+        @media (max-width: 1024px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .test-form {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+            
+            .header {
+                padding: 1rem;
+            }
+            
+            .metrics-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="logo">
+            <i class="fas fa-comments"></i>
+            NetPro OmniChat
+        </div>
+        <div class="status-indicator">
+            <i class="fas fa-circle"></i>
+            Sistema Online
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="metrics-grid">
+            <div class="metric-card">
+                <div class="metric-header">
+                    <span class="metric-title">Conversas Ativas</span>
+                    <div class="metric-icon" style="background: #dbeafe; color: var(--primary-blue);">
+                        <i class="fas fa-comments"></i>
+                    </div>
+                </div>
+                <div class="metric-value" id="activeConversations">47</div>
+                <div class="metric-change positive">↑ 12% vs ontem</div>
+            </div>
+
+            <div class="metric-card">
+                <div class="metric-header">
+                    <span class="metric-title">Resolução IA</span>
+                    <div class="metric-icon" style="background: #dcfce7; color: var(--secondary-green);">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                </div>
+                <div class="metric-value" id="aiResolution">72%</div>
+                <div class="metric-change positive">↑ 5% vs ontem</div>
+            </div>
+
+            <div class="metric-card">
+                <div class="metric-header">
+                    <span class="metric-title">Tempo Médio</span>
+                    <div class="metric-icon" style="background: #f3e8ff; color: var(--accent-purple);">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                </div>
+                <div class="metric-value" id="avgTime">2.3min</div>
+                <div class="metric-change positive">↓ 35% vs ontem</div>
+            </div>
+
+            <div class="metric-card">
+                <div class="metric-header">
+                    <span class="metric-title">Satisfação</span>
+                    <div class="metric-icon" style="background: #fef3c7; color: #f59e0b;">
+                        <i class="fas fa-star"></i>
+                    </div>
+                </div>
+                <div class="metric-value" id="satisfaction">4.6/5</div>
+                <div class="metric-change positive">↑ 0.3 vs ontem</div>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="conversations-panel">
+                <div class="panel-header">
+                    <h2 class="panel-title">Conversas Recentes</h2>
+                </div>
+                <div class="conversation-list" id="conversationList">
+                    <!-- Conversas serão carregadas via JavaScript -->
+                </div>
+            </div>
+
+            <div class="analytics-panel">
+                <div class="chart-card">
+                    <h3 class="chart-title">Performance por Canal</h3>
+                    <div style="margin-bottom: 1rem;">
+                        <div class="progress-label">
+                            <span>WhatsApp</span>
+                            <span>68%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 68%;"></div>
+                        </div>
+                    </div>
+                    <div style="margin-bottom: 1rem;">
+                        <div class="progress-label">
+                            <span>Chat Web</span>
+                            <span>20%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 20%;"></div>
+                        </div>
+                    </div>
+                    <div style="margin-bottom: 1rem;">
+                        <div class="progress-label">
+                            <span>Email</span>
+                            <span>12%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 12%;"></div>
+                        </div>
+                    </div>
+                </div>
+
+               <div class="alert-card">
+                   <div class="alert-title">
+                     <i class="fas fa-exclamation-triangle"></i>
+                    Instabilidade Detectada
+              </div>
+              <p>8 clientes reportaram lentidão na região de Copacabana nas últimas 2 horas.</p>
+              <div class="alert-status">
+              <button class="status-badge">Ver Detalhes</button>
+              <button class="alert-time">Ações NOC</button>
+             </div>
+          </div>
+
+                <div class="chart-card">
+                    <h3 class="chart-title">Tipos de Problema</h3>
+                    <div style="margin-bottom: 1rem;">
+                        <div class="progress-label">
+                            <span>Técnico</span>
+                            <span>45%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 45%;"></div>
+                        </div>
+                    </div>
+                    <div style="margin-bottom: 1rem;">
+                        <div class="progress-label">
+                            <span>Financeiro</span>
+                            <span>30%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 30%;"></div>
+                        </div>
+                    </div>
+                    <div style="margin-bottom: 1rem;">
+                        <div class="progress-label">
+                            <span>Comercial</span>
+                            <span>25%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 25%;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2 style="margin-bottom: 1.5rem; color: var(--dark);">Teste da API em Tempo Real</h2>
+            <form class="test-form" id="testForm">
+                <div class="form-group">
+                    <label class="form-label">Canal</label>
+                    <select class="form-select" id="testChannel">
+                        <option value="whatsapp">WhatsApp</option>
+                        <option value="email">Email</option>
+                        <option value="web_chat">Chat Web</option>
+                        <option value="phone">Telefone</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Cliente</label>
+                    <select class="form-select" id="testCustomer">
+                        <option value="CUST_12345">João Silva (Premium)</option>
+                        <option value="CUST_67890">Maria Santos (Basic)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Mensagem</label>
+                    <input type="text" class="form-input" id="testMessage" 
+                           placeholder="Ex: Minha internet está lenta" 
+                           value="Minha internet está muito lenta">
+                </div>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-paper-plane"></i>
+                    Testar
+                </button>
+            </form>
+
+            <div class="response-area" id="responseArea" style="display: none;">
+                <div class="response-header">
+                    <h3>Resposta da API:</h3>
+                    <span id="responseTime" class="metric-change neutral"></span>
+                </div>
+                <pre class="response-json" id="responseJson"></pre>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Simulação de dados em tempo real
+        const conversations = [
+            {
+                customer: "João Silva Santos",
+                time: "2 min atrás",
+                preview: "Minha internet está muito lenta hoje...",
+                channel: "whatsapp",
+                intent: "technical",
+                type: "ai"
+            },
+            {
+                customer: "Maria Santos Oliveira",
+                time: "5 min atrás", 
+                preview: "Preciso da segunda via do meu boleto",
+                channel: "whatsapp",
+                intent: "financial",
+                type: "ai"
+            },
+            {
+                customer: "Carlos Eduardo",
+                time: "8 min atrás",
+                preview: "Gostaria de upgrade do meu plano",
+                channel: "web_chat",
+                intent: "commercial", 
+                type: "human"
+            },
+            {
+                customer: "Ana Paula",
+                time: "12 min atrás",
+                preview: "Internet caindo direto, que raiva!",
+                channel: "whatsapp",
+                intent: "technical",
+                type: "human"
+            }
+        ];
+
+        function renderConversations() {
+            const container = document.getElementById('conversationList');
+            container.innerHTML = conversations.map(conv => `
+                <div class="conversation-item">
+                    <div class="conversation-header">
+                        <span class="customer-name">${conv.customer}</span>
+                        <span class="conversation-time">${conv.time}</span>
+                    </div>
+                    <div class="conversation-preview">${conv.preview}</div>
+                    <div class="conversation-tags">
+                        <span class="tag ${conv.channel}">${conv.channel}</span>
+                        <span class="tag ${conv.intent}">${conv.intent}</span>
+                        <span class="tag ${conv.type}">${conv.type === 'ai' ? 'IA' : 'Humano'}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Atualizar métricas em tempo real
+        function updateMetrics() {
+            const metrics = {
+                activeConversations: Math.floor(40 + Math.random() * 20),
+                aiResolution: Math.floor(70 + Math.random() * 10),
+                avgTime: (2 + Math.random()).toFixed(1),
+                satisfaction: (4.4 + Math.random() * 0.4).toFixed(1)
+            };
+
+            document.getElementById('activeConversations').textContent = metrics.activeConversations;
+            document.getElementById('aiResolution').textContent = metrics.aiResolution + '%';
+            document.getElementById('avgTime').textContent = metrics.avgTime + 'min';
+            document.getElementById('satisfaction').textContent = metrics.satisfaction + '/5';
+        }
+
+        // Teste da API
+        document.getElementById('testForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const channel = document.getElementById('testChannel').value;
+            const customer = document.getElementById('testCustomer').value;
+            const message = document.getElementById('testMessage').value;
+
+            const startTime = Date.now();
+            
+            try {
+                const response = await fetch('/api/v1/conversations/message', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        channel,
+                        customer_identifier: customer,
+                        message
+                    })
+                });
+
+                const data = await response.json();
+                const duration = Date.now() - startTime;
+
+                document.getElementById('responseArea').style.display = 'block';
+                document.getElementById('responseTime').textContent = `${duration}ms`;
+                document.getElementById('responseJson').textContent = JSON.stringify(data, null, 2);
+                
+            } catch (error) {
+                document.getElementById('responseArea').style.display = 'block';
+                document.getElementById('responseTime').textContent = 'Error';
+                document.getElementById('responseJson').textContent = `Erro: ${error.message}`;
+            }
+        });
+
+        // Inicializar dashboard
+        renderConversations();
+        updateMetrics();
+        
+        // Atualizar métricas a cada 30 segundos
+        setInterval(updateMetrics, 30000);
+    </script>
+</body>
+</html>

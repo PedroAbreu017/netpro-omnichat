@@ -1,0 +1,695 @@
+# src/docs/swagger.yaml
+openapi: 3.0.3
+info:
+  title: NetPro OmniChat API
+  description: |
+    Sistema de atendimento omnichannel inteligente para ISPs
+    
+    ## Funcionalidades Principais
+    - Processamento unificado de mensagens de múltiplos canais
+    - Classificação inteligente com IA especializada em ISPs
+    - Integração WhatsApp Business API (META)
+    - Webhooks robustos com retry pattern
+    - Context engine para experiência personalizada
+    
+    ## Arquitetura
+    - **Backend**: Node.js + Express + MongoDB + Redis
+    - **IA**: OpenAI API + Intent Classification
+    - **Integrations**: WhatsApp Business, CRM, Webhooks
+  version: 1.0.0
+  contact:
+    name: Pedro Marschausen
+    email: pedroabreu6497@gmail.com
+    url: https://linkedin.com/in/pedro-marschhausen-2756891b3
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: http://localhost:3000/api/v1
+    description: Development server
+  - url: https://netpro-omnichat.herokuapp.com/api/v1
+    description: Production server
+
+paths:
+  /health:
+    get:
+      summary: Health check
+      description: Verifica status da API e conectividade com bancos
+      tags:
+        - System
+      responses:
+        '200':
+          description: Sistema saudável
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "OK"
+                  timestamp:
+                    type: string
+                    format: date-time
+                  uptime:
+                    type: number
+                    example: 3600.5
+                  environment:
+                    type: string
+                    example: "development"
+
+  /conversations/message:
+    post:
+      summary: Processar nova mensagem
+      description: |
+        Endpoint principal que recebe mensagens de qualquer canal e processa através do sistema omnichannel.
+        
+        **Fluxo de processamento:**
+        1. Identificação do cliente
+        2. Carregamento do contexto
+        3. Classificação IA
+        4. Decisão de roteamento (IA vs Humano)
+        5. Resposta automática ou escalonamento
+      tags:
+        - Conversations
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - channel
+                - customer_identifier
+                - message
+              properties:
+                channel:
+                  type: string
+                  enum: [whatsapp, email, web_chat, phone]
+                  description: Canal de origem da mensagem
+                  example: "whatsapp"
+                customer_identifier:
+                  type: string
+                  description: Identificador do cliente (telefone, CPF, email)
+                  example: "CUST_12345"
+                message:
+                  type: string
+                  description: Conteúdo da mensagem do cliente
+                  example: "Minha internet está muito lenta"
+                metadata:
+                  type: object
+                  description: Metadados adicionais do canal
+                  properties:
+                    timestamp:
+                      type: string
+                      format: date-time
+                    message_id:
+                      type: string
+                    attachments:
+                      type: array
+                      items:
+                        type: string
+      responses:
+        '200':
+          description: Mensagem processada com sucesso
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  timestamp:
+                    type: string
+                    format: date-time
+                  conversation_id:
+                    type: string
+                    example: "conv_20240117_001"
+                  session_id:
+                    type: string
+                    example: "sess_20240117_143052_wpp"
+                  resolution_type:
+                    type: string
+                    enum: [ai_automated, human_required]
+                    example: "ai_automated"
+                  response:
+                    type: string
+                    description: Resposta gerada pela IA
+                    example: "Vou verificar sua conexão..."
+                  actions_taken:
+                    type: array
+                    items:
+                      type: string
+                    example: ["network_status_check", "speed_test"]
+                  estimated_resolution_time:
+                    type: string
+                    example: "00:02:00"
+                  ai_analysis:
+                    $ref: '#/components/schemas/AIAnalysis'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /conversations/{id}/context:
+    get:
+      summary: Obter contexto da conversa
+      description: Busca contexto completo do cliente incluindo histórico e sessão ativa
+      tags:
+        - Conversations
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: ID do cliente
+          example: "CUST_12345"
+      responses:
+        '200':
+          description: Contexto recuperado com sucesso
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  context:
+                    $ref: '#/components/schemas/CustomerContext'
+                  retrieved_at:
+                    type: string
+                    format: date-time
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /whatsapp/webhook:
+    get:
+      summary: Verificação webhook WhatsApp
+      description: Endpoint para verificação do webhook pela META
+      tags:
+        - WhatsApp
+      parameters:
+        - in: query
+          name: hub.mode
+          required: true
+          schema:
+            type: string
+            example: "subscribe"
+        - in: query
+          name: hub.verify_token
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: hub.challenge
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Webhook verificado com sucesso
+          content:
+            text/plain:
+              schema:
+                type: string
+        '403':
+          description: Token de verificação inválido
+
+    post:
+      summary: Receber mensagens WhatsApp
+      description: |
+        Webhook que recebe mensagens da META WhatsApp Business API
+        
+        **Processamento:**
+        1. Verificação da assinatura
+        2. Extração das mensagens
+        3. Processamento via sistema omnichannel
+        4. Resposta automática ou escalonamento
+      tags:
+        - WhatsApp
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                entry:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      changes:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            value:
+                              type: object
+                              properties:
+                                messages:
+                                  type: array
+                                  items:
+                                    $ref: '#/components/schemas/WhatsAppMessage'
+                                contacts:
+                                  type: array
+                                  items:
+                                    type: object
+      responses:
+        '200':
+          description: Webhook processado com sucesso
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: "OK"
+
+  /whatsapp/send-message:
+    post:
+      summary: Enviar mensagem WhatsApp
+      description: Envia mensagem via WhatsApp Business API
+      tags:
+        - WhatsApp
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - to
+                - message
+              properties:
+                to:
+                  type: string
+                  description: Número do destinatário
+                  example: "5521987654321"
+                message:
+                  type: string
+                  description: Texto da mensagem
+                  example: "Olá! Como posso ajudar?"
+                type:
+                  type: string
+                  enum: [text, template, interactive]
+                  default: text
+                template_data:
+                  type: object
+                  description: Dados do template (se type = template)
+                  properties:
+                    name:
+                      type: string
+                    language:
+                      type: string
+                      default: "pt_BR"
+                    components:
+                      type: array
+                      items:
+                        type: object
+      responses:
+        '200':
+          description: Mensagem enviada com sucesso
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message_id:
+                    type: string
+                  recipient:
+                    type: string
+                  timestamp:
+                    type: string
+                    format: date-time
+
+  /whatsapp/templates:
+    get:
+      summary: Listar templates WhatsApp
+      description: Retorna templates aprovados pela META
+      tags:
+        - WhatsApp
+      responses:
+        '200':
+          description: Templates recuperados com sucesso
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  templates:
+                    type: object
+                    additionalProperties:
+                      $ref: '#/components/schemas/WhatsAppTemplate'
+
+  /webhooks/crm-notify:
+    post:
+      summary: Notificar CRM
+      description: Envia webhook para sistema CRM externo
+      tags:
+        - Webhooks
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - event_type
+                - payload
+              properties:
+                event_type:
+                  type: string
+                  enum: [ticket_created, ticket_updated, customer_updated]
+                  example: "ticket_created"
+                payload:
+                  type: object
+                  description: Dados do evento
+      responses:
+        '200':
+          description: Webhook enviado com sucesso
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  webhook_id:
+                    type: string
+                  delivery_status:
+                    type: string
+                    example: "delivered"
+                  attempts:
+                    type: integer
+                  timestamp:
+                    type: string
+                    format: date-time
+
+  /webhooks/test:
+    post:
+      summary: Testar webhook
+      description: Testa conectividade e entrega de webhook
+      tags:
+        - Webhooks
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                webhook_url:
+                  type: string
+                  format: uri
+                  description: URL de destino (opcional, usa padrão se não informado)
+      responses:
+        '200':
+          description: Teste concluído com sucesso
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  result:
+                    type: object
+
+  /customers/{id}:
+    get:
+      summary: Obter dados do cliente
+      description: Busca informações completas do cliente
+      tags:
+        - Customers
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          example: "CUST_12345"
+      responses:
+        '200':
+          description: Cliente encontrado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  customer:
+                    $ref: '#/components/schemas/Customer'
+                  subscription:
+                    $ref: '#/components/schemas/Subscription'
+                  financial_status:
+                    $ref: '#/components/schemas/FinancialStatus'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    put:
+      summary: Atualizar cliente
+      description: Atualiza dados do cliente
+      tags:
+        - Customers
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CustomerUpdate'
+      responses:
+        '200':
+          description: Cliente atualizado com sucesso
+
+components:
+  schemas:
+    AIAnalysis:
+      type: object
+      properties:
+        intent:
+          type: string
+          example: "technical"
+        confidence:
+          type: number
+          format: float
+          example: 0.92
+        sentiment:
+          type: string
+          enum: [positive, neutral, negative, frustrated]
+          example: "frustrated"
+        processing_time_ms:
+          type: integer
+          example: 150
+
+    CustomerContext:
+      type: object
+      properties:
+        customer:
+          $ref: '#/components/schemas/Customer'
+        session:
+          type: object
+        recent_interactions:
+          type: array
+          items:
+            type: object
+        context_loaded_at:
+          type: string
+          format: date-time
+
+    Customer:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "CUST_12345"
+        cpf:
+          type: string
+          example: "123.456.789-00"
+        name:
+          type: string
+          example: "João Silva Santos"
+        email:
+          type: string
+          example: "joao.silva@email.com"
+        phone:
+          type: string
+          example: "+5521987654321"
+        plan:
+          type: string
+          example: "Fibra Premium 200MB"
+        tier:
+          type: string
+          enum: [basic, premium, enterprise]
+          example: "premium"
+        created_at:
+          type: string
+          format: date-time
+
+    Subscription:
+      type: object
+      properties:
+        plan_name:
+          type: string
+          example: "Fibra Premium 200MB"
+        monthly_fee:
+          type: number
+          example: 89.90
+        status:
+          type: string
+          example: "active"
+        due_day:
+          type: integer
+          example: 15
+
+    FinancialStatus:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [em_dia, inadimplente, negociacao]
+          example: "em_dia"
+        pending_amount:
+          type: number
+          example: 0.00
+        last_payment:
+          type: string
+          format: date
+          example: "2024-01-15"
+
+    WhatsAppMessage:
+      type: object
+      properties:
+        id:
+          type: string
+        from:
+          type: string
+        timestamp:
+          type: string
+        type:
+          type: string
+        text:
+          type: object
+          properties:
+            body:
+              type: string
+
+    WhatsAppTemplate:
+      type: object
+      properties:
+        name:
+          type: string
+          example: "netpro_welcome"
+        category:
+          type: string
+          example: "UTILITY"
+        language:
+          type: string
+          example: "pt_BR"
+        components:
+          type: array
+          items:
+            type: object
+
+    CustomerUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+        phone:
+          type: string
+        preferences:
+          type: object
+
+  responses:
+    BadRequest:
+      description: Requisição inválida
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                example: "Validation failed"
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    field:
+                      type: string
+                    message:
+                      type: string
+                    value:
+                      type: string
+
+    NotFound:
+      description: Recurso não encontrado
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                example: "Not Found"
+              message:
+                type: string
+
+    InternalError:
+      description: Erro interno do servidor
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                example: "Internal server error"
+              message:
+                type: string
+
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: API key para autenticação
+
+tags:
+  - name: System
+    description: Health checks e status do sistema
+  - name: Conversations
+    description: Processamento de conversas omnichannel
+  - name: WhatsApp
+    description: Integração WhatsApp Business API
+  - name: Webhooks
+    description: Integrações via webhooks
+  - name: Customers
+    description: Gerenciamento de clientes
+
+externalDocs:
+  description: Documentação completa do NetPro OmniChat
+  url: https://github.com/netpro/omnichat/blob/main/README.md
